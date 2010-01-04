@@ -1,1 +1,22 @@
 * text=auto !eol
+Sniper/trunk/build.xml -text
+Sniper/trunk/build/built-jar.properties -text
+Sniper/trunk/build/classes/.netbeans_automatic_build -text
+Sniper/trunk/build/classes/ForNeVeR/Geometry.class -text
+Sniper/trunk/build/classes/ForNeVeR/RadarMap.class -text
+Sniper/trunk/build/classes/ForNeVeR/RadarTarget.class -text
+Sniper/trunk/build/classes/ForNeVeR/Sniper.class -text
+Sniper/trunk/dist/README.TXT -text
+Sniper/trunk/dist/Sniper.jar -text
+Sniper/trunk/dist/lib/robocode.jar -text
+Sniper/trunk/nbproject/build-impl.xml -text
+Sniper/trunk/nbproject/genfiles.properties -text
+Sniper/trunk/nbproject/private/config.properties -text
+Sniper/trunk/nbproject/private/private.properties -text
+Sniper/trunk/nbproject/private/private.xml -text
+Sniper/trunk/nbproject/project.properties -text
+Sniper/trunk/nbproject/project.xml -text
+Sniper/trunk/src/ForNeVeR/Geometry.java -text
+Sniper/trunk/src/ForNeVeR/RadarMap.java -text
+Sniper/trunk/src/ForNeVeR/RadarTarget.java -text
+Sniper/trunk/src/ForNeVeR/Sniper.java -text
