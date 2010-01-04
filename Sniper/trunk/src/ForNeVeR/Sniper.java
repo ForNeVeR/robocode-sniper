@@ -1,8 +1,10 @@
 package ForNeVeR;
 
 import java.awt.*;
+import static java.lang.Math.PI;
 import robocode.*;
 import static ForNeVeR.Geometry.*;
+
 /**
  * Sniper RoboCode bot. Uses advanced targeting system.
  * @author ForNeVeR
@@ -12,14 +14,15 @@ public class Sniper extends AdvancedRobot
     /**
      * Distance that robot will try to keep from current enemy.
      */
-	final static double DISTANCE_TO_ENEMY = 100;
-	final static double DELTA_DISTANCE = 35;
+	private final static double DISTANCE_TO_ENEMY = 100;
+	private final static double DELTA_DISTANCE = 35;
 
-	RadarMap map;
-	double future_x, future_y;
-	double heading = 1;
+	private RadarMap map;
 
-	RadarTarget currentTarget;
+    public Sniper()
+    {
+        map = new RadarMap();
+    }
 
 	/**
 	 * run: Sniper's default behavior
@@ -28,32 +31,64 @@ public class Sniper extends AdvancedRobot
     {
         setColors(Color.black, Color.black, Color.green, Color.green,
                 Color.red);
-       	map = new RadarMap();
-
-		future_x = getX();
-		future_y = getY();
 
 		out.println("Sniper reporting.");
 
 		while(true)
         {
 			if(getRadarTurnRemaining() == 0)
-	            setTurnRadarRightRadians(Math.PI * 2);
+	            setTurnRadarRightRadians(PI * 2);
 
-			RadarTarget t = map.getNearestTarget(getX(), getY());
-			currentTarget = t;
+			RadarTarget target = map.getNearestTarget(getX(), getY());
 
-			if(t != null)
+			if(target != null)
 			{
-				// First we must calculate future position of target
-				// Enemy position modelling.
-                RadarTarget futureEnemy = t.estimatePositionAt(getTime());
-				future_x = futureEnemy.x;
-				future_y = futureEnemy.y;
-
-				double distance = distanceBetween(future_x, getX(), future_y,
+				// Determine moving.
+				double distanceToEnemy = distanceBetween(target.coords, getX(),
                         getY());
-				double bearingToEnemy = Math.atan2(future_x - getX(), future_y - getY());
+				double bearingToEnemy = Math.atan2(target.coords.x - getX(),
+                        target.coords.y - getY());
+
+                if(distanceToEnemy > DISTANCE_TO_ENEMY + DELTA_DISTANCE)
+                {
+                    // We have 2 points to move to: to the left side of enemy
+                    // and to the right side of him. We have to determine which
+                    // point to use.
+                    Point leftPoint = movePointByVector(target.coords,
+                            DISTANCE_TO_ENEMY, bearingToEnemy - PI / 2);
+                    Point rightPoint = movePointByVector(target.coords,
+                            DISTANCE_TO_ENEMY, bearingToEnemy + PI / 2);
+                    // TODO: Somehow check both points. Temporary solution is
+                    // just always use left point.
+                    setMoveToPoint(leftPoint);
+                }
+                else if(distanceToEnemy < DISTANCE_TO_ENEMY - DELTA_DISTANCE)
+                {
+                    // TODO: Check if we are ramming enemy. Else:
+                    setTurnRight(normalRelativeAngle(bearingToEnemy
+                            - getHeading()));
+                    setBack(DISTANCE_TO_ENEMY - distanceToEnemy);
+                }
+                else
+                {
+                    // Cycling maneuver.
+                    // Again, we have 2 possible bearings to turn to: clockwise
+                    // or counter-clockwise.
+                    double bearingCW = normalRelativeAngle(bearingToEnemy
+                            - getHeading() + PI / 2);
+                    double bearingCCW = normalRelativeAngle(bearingToEnemy
+                            - getHeading() - PI / 2);
+                    // TODO: Determine appropriate bearing for moving.
+                    setTurnRight(bearingCW);
+                    // Now determine turning speed for moving inside a circle
+                    // with radius = DISTANCE_TO_ENEMY.
+                    double circleLength = 2 * PI * DISTANCE_TO_ENEMY;
+                    double cycleTime = circleLength / Rules.MAX_VELOCITY;
+                    setMaxTurnRate(radiansToDegrees(2 * PI / cycleTime));
+                    setAhead(circleLength);
+                }
+
+                // TODO: Proceed refactoring here.
 				double turningRadians = normalRelativeAngle(bearingToEnemy - getGunHeadingRadians());
 				double bulletPower = firePower(t);
 
@@ -173,20 +208,40 @@ public class Sniper extends AdvancedRobot
 		}
 	}
 
+    /**
+     * Calculates firepower needed to fire to target.
+     * @param t RadarTarget object represents target.
+     * @return Preferred firepower.
+     */
 	private double firePower(RadarTarget t)
 	{
-		double distance = Math.sqrt(Math.pow(t.x - getX(), 2) + Math.pow(t.y - getY(), 2));
+		double distance = distanceBetween(t.coords, getX(), getY());
 
 		double power = 0;
-
 		if(distance < 250)
 			power = Rules.MAX_BULLET_POWER;
 		else
 			power = 250 / distance * Rules.MAX_BULLET_POWER;
-		//power -= t.velocity / Rules.MAX_VELOCITY * 0.25 * Rules.MAX_BULLET_POWER;
 
-		return Math.max(power, 0.5/*Rules.MIN_BULLET_POWER*/);
+		return Math.max(power, 0.5);
 	}
+
+    /**
+     * Starts movement to specified point.
+     * @param p Point to move to.
+     */
+    private void setMoveToPoint(Point p)
+    {
+        double distanceToPoint = distanceBetween(p, getX(), getY());
+        double relativeBearingToPoint = normalRelativeAngle(Math.atan2(p.x
+                - getX(), p.y - getY()) - getHeading());
+
+        // Set this to max because it might be set to lesser value by other
+        // methods.
+        setMaxTurnRate(Rules.MAX_TURN_RATE);
+        setTurnRightRadians(relativeBearingToPoint);
+        setAhead(distanceToPoint);
+    }
 
 	/**
 	 * onScannedRobot: What to do when you see another robot
@@ -204,7 +259,6 @@ public class Sniper extends AdvancedRobot
 
     @Override public void onRobotDeath(RobotDeathEvent e)
     {
-		out.println("Target " + e.getName() + " dead.");
         map.removeTarget(e.getName());
     }
 
@@ -248,6 +302,8 @@ public class Sniper extends AdvancedRobot
 
 	@Override public void onHitRobot(HitRobotEvent e)
 	{
+        // TODO: Analyse self and enemy energy and decise wherther to ram him
+        // or not.
 		setBack(500);
 	}
 

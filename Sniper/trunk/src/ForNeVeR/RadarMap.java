@@ -16,7 +16,6 @@ class RadarMap
         targets = new ArrayList<RadarTarget>();
     }
 
-
     /**
      * Adds new radar target or updates existing.
      * @param name - name of target.
@@ -30,17 +29,12 @@ class RadarMap
         {
             if(targets.get(i).name.equals(name))
             {
-                targets.get(i).time = time;
-                targets.get(i).x = x;
-                targets.get(i).y = y;
-                targets.get(i).heading = heading;
-                targets.get(i).velocity = velocity;
+                targets.set(i, new RadarTarget(name, time, x, y, heading,
+                        velocity));
                 return;
             }
         }
-        RadarTarget temp = new RadarTarget(name, time, x, y, heading,
-                velocity);
-        targets.add(temp);
+        targets.add(new RadarTarget(name, time, x, y, heading, velocity));
     }
 
     /**
@@ -55,14 +49,14 @@ class RadarMap
         if(targets.size() == 0)
             return null;
 
-        double min_distance = distanceBetween(x, targets.get(0).x, y,
-                targets.get(0).y);
+        double min_distance = distanceBetween(x, targets.get(0).coords.x, y,
+                targets.get(0).coords.y);
         int index = 0;
 
         for(int i = 1; i < targets.size(); i++)
         {
-            double distance = distanceBetween(x, targets.get(i).x, y,
-                    targets.get(i).y);
+            double distance = distanceBetween(x, targets.get(i).coords.x, y,
+                    targets.get(i).coords.y);
             if(distance < min_distance)
             {
                 min_distance = distance;
