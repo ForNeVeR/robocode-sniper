@@ -32,8 +32,6 @@ public class Sniper extends AdvancedRobot
         setColors(Color.black, Color.black, Color.green, Color.green,
                 Color.red);
 
-		out.println("Sniper reporting.");
-
 		while(true)
         {
 			if(getRadarTurnRemaining() == 0)
@@ -88,121 +86,46 @@ public class Sniper extends AdvancedRobot
                     setAhead(circleLength);
                 }
 
-                // TODO: Proceed refactoring here.
-				double turningRadians = normalRelativeAngle(bearingToEnemy - getGunHeadingRadians());
-				double bulletPower = firePower(t);
+				double turnByAngle = normalRelativeAngle(bearingToEnemy
+                        - getGunHeadingRadians());
+				double bulletPower = firePower(target);
 
-				double bulletRadius = 0; // Distance travelled by our bullet
-
-				for(long time = 0; bulletRadius < distance || turningRadians > Rules.GUN_TURN_RATE * time; time++)
+                // Enemy position modelling.
+				double bulletRadius = 0; // distance travelled by our bullet
+                double imaginaryDistanceToEnemy = distanceToEnemy;
+				for(long time = 0; bulletRadius < imaginaryDistanceToEnemy ||
+                        turnByAngle > Rules.GUN_TURN_RATE * time; time++)
 				{
 					bulletRadius += Rules.getBulletSpeed(bulletPower);
-					future_x += t.velocity * Math.sin(t.heading);
-					future_y += t.velocity * Math.cos(t.heading);
+					
+                    Point imaginaryTarget = target.estimatePositionAt(getTime()
+                            + time);
+                    imaginaryDistanceToEnemy = distanceBetween(imaginaryTarget,
+                            getX(), getY());
+					double imaginaryBearingToEnemy =
+                            Math.atan2(imaginaryTarget.x - getX(),
+                            imaginaryTarget.y - getY());
+					turnByAngle = normalRelativeAngle(imaginaryBearingToEnemy
+                            - getGunHeadingRadians());
 
-					distance = Math.sqrt(Math.pow(future_x - getX(), 2) + Math.pow(future_y - getY(), 2));
-					bearingToEnemy = Math.atan2(future_x - getX(), future_y - getY());
-					turningRadians = normalRelativeAngle(bearingToEnemy - getGunHeadingRadians());
-
-					if(future_x < 0 || future_x > getBattleFieldWidth() || future_y < 0 || future_y > getBattleFieldHeight())
+					if(imaginaryTarget.x < 0
+                            || imaginaryTarget.x > getBattleFieldWidth()
+                            || imaginaryTarget.y < 0
+                            || imaginaryTarget.y > getBattleFieldHeight())
 						break;
 				}
 
-				setTurnGunRightRadians(turningRadians);
+				setTurnGunRightRadians(turnByAngle);
 
-				// Now we have to plan moving.
-				// Estimate current enemy coordinates:
-				double enemyX = t.x + t.velocity * Math.sin(t.heading) * (getTime() - t.time);
-				double enemyY = t.y + t.velocity * Math.cos(t.heading) * (getTime() - t.time);
-
-				distance = Math.sqrt(Math.pow(enemyX - getX(), 2) + Math.pow(enemyY - getY(), 2));
-				bearingToEnemy = Math.atan2(enemyX - getX(), enemyY - getY());
-
-				if(distance > DISTANCE_TO_ENEMY + DELTA_DISTANCE)
-				{
-					double targetX = enemyX + DISTANCE_TO_ENEMY * Math.sin(bearingToEnemy + Math.PI / 2);
-					double targetY = enemyY + DISTANCE_TO_ENEMY * Math.cos(bearingToEnemy + Math.PI / 2);
-					double angleToTarget = normalRelativeAngle(Math.atan2(targetX - getX(), targetY - getY()) - getHeadingRadians());
-
-					double targetX_2nd = enemyX + DISTANCE_TO_ENEMY * Math.sin(bearingToEnemy - Math.PI / 2);
-					double targetY_2nd = enemyY + DISTANCE_TO_ENEMY * Math.cos(bearingToEnemy - Math.PI / 2);
-					double angleToTarget_2nd = normalRelativeAngle(Math.atan2(targetX_2nd - getX(), targetY_2nd - getY()) - getHeadingRadians());
-
-					if(targetX < 0 || targetX > getBattleFieldWidth() || targetY < 0 || targetY > getBattleFieldHeight()
-						|| Math.abs(angleToTarget_2nd) < Math.abs(angleToTarget))
-					{
-						targetX = targetX_2nd;
-						targetY = targetY_2nd;
-						angleToTarget = angleToTarget_2nd;
-					}
-
-					Graphics2D g = getGraphics();
-					g.setColor(Color.yellow);
-					g.drawOval((int) (targetX - 25), (int) (targetY - 25), 50, 50);
-
-					setTurnRightRadians(angleToTarget);
-					setAhead(Geometry.distanceBetween(getX(), getY(), targetX, targetY));
-				}
-				else if(distance < DISTANCE_TO_ENEMY - DELTA_DISTANCE)
-				{
-					setBack(DISTANCE_TO_ENEMY - distance);
-				}
-				else
-				{
-					double bearing = normalRelativeAngle(bearingToEnemy - getHeadingRadians() + Math.PI / 2);
-					if(Math.abs(bearing) > Math.PI)
-						bearing = normalRelativeAngle(bearingToEnemy - getHeadingRadians() - Math.PI / 2);
-
-					Graphics2D g = getGraphics();
-					g.setColor(Color.yellow);
-					g.drawLine((int)getX(), (int)getY(), (int)(getX() + 50 * Math.sin(bearing + getHeadingRadians())), (int)(getY() + 50 * Math.cos(bearing + getHeadingRadians())));
-
-					setTurnRightRadians(bearing);
-					setAhead(2 * DISTANCE_TO_ENEMY * Math.PI * heading);
-				}
-
-				//double angle = Utils.normalRelativeAngle(bearingToEnemy - getHeadingRadians());
-
-
-				/*if(distance < DISTANCE_TO_ENEMY - DELTA_DISTANCE)
-				{
-					currentX += distance Utils.
-					setTurnRightRadians(angle);
-					if(Math.abs(angle) < Math.PI / 2)
-						setBack(DISTANCE_TO_ENEMY - distance);
-					else
-						setAhead(DISTANCE_TO_ENEMY - distance);
-				}
-				else if(distance > DISTANCE_TO_ENEMY + DELTA_DISTANCE)
-				{
-					setTurnRightRadians(angle);
-					if(Math.abs(angle) < Math.PI / 2)
-						setAhead(distance - DISTANCE_TO_ENEMY);
-					else
-						setBack(distance - DISTANCE_TO_ENEMY);
-				}
-				else // DISTANCE_TO_ENEMY - DELTA_DISTANCE < distance < DISTANCE_TO_ENEMY + DELTA_DISTANCE
-				{
-					double l_angle = Utils.normalRelativeAngle(angle - Math.PI / 2);
-					double r_angle = Utils.normalRelativeAngle(angle + Math.PI / 2);
-
-					if(Math.abs(l_angle) < Math.abs(r_angle))
-						angle = l_angle;
-					else
-						angle = r_angle;
-					setTurnRightRadians(angle);
-					setAhead(DISTANCE_TO_ENEMY * Math.PI * heading);
-				}*/
-
-				if(getGunHeat() == 0 && Math.abs(getGunTurnRemainingRadians()) < Math.atan2(20, distance))
+				if(getGunHeat() == 0
+                        && Math.abs(getGunTurnRemainingRadians()) < Math.atan2(
+                        20, imaginaryDistanceToEnemy))
 					fire(bulletPower);
 				else
 					doNothing();
 			}
 			else
 			{
-				future_x = getX();
-				future_y = getY();
 				doNothing();
 			}
 		}
@@ -248,13 +171,12 @@ public class Sniper extends AdvancedRobot
 	 */
 	@Override public void onScannedRobot(ScannedRobotEvent e)
     {
-		double bearing = e.getBearingRadians();
-        double distance = e.getDistance();
+		Point myPos = new Point(getX(), getY());
+        Point enemyPos = movePointByVector(myPos, e.getDistance(),
+                e.getBearingRadians());
 
-        double x = getX() + distance * Math.sin(getHeadingRadians() + bearing);
-        double y = getY() + distance * Math.cos(getHeadingRadians() + bearing);
-
-        map.setTarget(e.getName(), getTime(), x, y, e.getHeadingRadians(), e.getVelocity());
+        map.setTarget(e.getName(), getTime(), enemyPos.x, enemyPos.y,
+                e.getHeadingRadians(), e.getVelocity());
     }
 
     @Override public void onRobotDeath(RobotDeathEvent e)
@@ -264,51 +186,46 @@ public class Sniper extends AdvancedRobot
 
 	@Override public void onPaint(Graphics2D g)
 	{
-		g.setColor(Color.red);
-		g.drawOval((int) (future_x - 25), (int) (future_y - 25), 50, 50);
+        RadarTarget currentTarget = map.getNearestTarget(getX(), getY());
 
 		if(currentTarget != null)
 		{
-			double currentX = currentTarget.x + currentTarget.velocity * Math.sin(currentTarget.heading) * (getTime() - currentTarget.time);
-			double currentY = currentTarget.y + currentTarget.velocity * Math.cos(currentTarget.heading) * (getTime() - currentTarget.time);
+			Point currentPos = movePointByVector(currentTarget.coords,
+                    currentTarget.velocity * (getTime() - currentTarget.time),
+                    currentTarget.heading);
 
 			g.setColor(Color.green);
-			g.drawOval((int) (currentX - (DISTANCE_TO_ENEMY - DELTA_DISTANCE)), (int) (currentY - (DISTANCE_TO_ENEMY - DELTA_DISTANCE)),
-		 		(int)(DISTANCE_TO_ENEMY - DELTA_DISTANCE) * 2, (int)(DISTANCE_TO_ENEMY - DELTA_DISTANCE) * 2);
-			g.drawOval((int) (currentX - (DISTANCE_TO_ENEMY + DELTA_DISTANCE)), (int) (currentY - (DISTANCE_TO_ENEMY + DELTA_DISTANCE)),
-		 		(int)(DISTANCE_TO_ENEMY + DELTA_DISTANCE) * 2, (int)(DISTANCE_TO_ENEMY + DELTA_DISTANCE) * 2);
+			g.drawOval((int) (currentPos.x - (DISTANCE_TO_ENEMY
+                    - DELTA_DISTANCE)), (int) (currentPos.y
+                    - (DISTANCE_TO_ENEMY - DELTA_DISTANCE)),
+                    (int) (DISTANCE_TO_ENEMY - DELTA_DISTANCE) * 2,
+                    (int)(DISTANCE_TO_ENEMY - DELTA_DISTANCE) * 2);
+			g.drawOval((int) (currentPos.x - (DISTANCE_TO_ENEMY
+                    + DELTA_DISTANCE)), (int) (currentPos.y
+                    - (DISTANCE_TO_ENEMY + DELTA_DISTANCE)),
+                    (int) (DISTANCE_TO_ENEMY + DELTA_DISTANCE) * 2,
+                    (int) (DISTANCE_TO_ENEMY + DELTA_DISTANCE) * 2);
 		}
 
 		for(int i = 0; i < map.targets.size(); i++)
 		{
             // Paint estimated position of target
-			RadarTarget t = map.targets.get(i).estimatePositionAt(getTime());
+			Point p = map.targets.get(i).estimatePositionAt(getTime());
 			g.setColor(Color.blue);
-			g.drawOval((int) (t.x - 25), (int) (t.y - 25), 50, 50);
+			g.drawOval((int) (p.x - 25), (int) (p.y - 25), 50, 50);
             
             // Paint last scanned position of target
-            t = map.targets.get(i);
+            RadarTarget t = map.targets.get(i);
 			g.setColor(Color.orange);
-			g.drawOval((int) (t.x - 25), (int) (t.y - 25), 50, 50);
+			g.drawOval((int) (t.coords.x - 25), (int) (t.coords.y - 25), 50,
+                    50);
 		}
 	}
 
-	/*public void onHitByBullet(HitByBulletEvent e)
-	{
-		// Move ahead 100 and in the same time turn left papendicular to the bullet
-		setTurnRightRadians(Math.PI / 2 - e.getBearingRadians());
-		setAhead(100);
-	}*/
-
-	@Override public void onHitRobot(HitRobotEvent e)
+    @Override public void onHitRobot(HitRobotEvent e)
 	{
         // TODO: Analyse self and enemy energy and decise wherther to ram him
         // or not.
 		setBack(500);
 	}
-
-	@Override public void onHitWall(HitWallEvent e)
-	{
-		heading = -heading;
-    }
 }
