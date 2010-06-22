@@ -58,6 +58,10 @@ public class Sniper extends AdvancedRobot
                             DISTANCE_TO_ENEMY, bearingToEnemy + PI / 2);
                     // TODO: Somehow check both points. Temporary solution is
                     // just always use left point.
+                    Graphics2D g = getGraphics();
+                    g.setColor(Color.blue);
+                    g.drawOval((int) (leftPoint.x - 25), (int) (leftPoint.y
+                            - 25), 50, 50);
                     setMoveToPoint(leftPoint);
                 }
                 else if(distanceToEnemy < DISTANCE_TO_ENEMY - DELTA_DISTANCE)
@@ -157,7 +161,7 @@ public class Sniper extends AdvancedRobot
     {
         double distanceToPoint = distanceBetween(p, getX(), getY());
         double relativeBearingToPoint = normalRelativeAngle(Math.atan2(p.x
-                - getX(), p.y - getY()) - getHeading());
+                - getX(), p.y - getY()) - getHeadingRadians());
 
         // Set this to max because it might be set to lesser value by other
         // methods.
@@ -173,7 +177,7 @@ public class Sniper extends AdvancedRobot
     {
 		Point myPos = new Point(getX(), getY());
         Point enemyPos = movePointByVector(myPos, e.getDistance(),
-                e.getBearingRadians());
+                e.getBearingRadians() + getHeadingRadians());
 
         map.setTarget(e.getName(), getTime(), enemyPos.x, enemyPos.y,
                 e.getHeadingRadians(), e.getVelocity());
