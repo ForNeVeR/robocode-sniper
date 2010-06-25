@@ -19,44 +19,43 @@ class RadarMap
     /**
      * Adds new radar target or updates existing.
      * @param name - name of target.
-     * @param x - absolute x coord.
-     * @param y - absolute y coord.
+     * @param coords - absolute coordinates of target.
+     * @param heading - absolute heading of target in radians.
+     * @param velocity - velocity of target.
      */
-    public void setTarget(String name, long time, double x, double y,
-            double heading, double velocity)
+    public void setTarget(String name, long time, Point coords, double heading,
+            double velocity)
     {
         for(int i = 0; i < targets.size(); i++)
         {
             if(targets.get(i).name.equals(name))
             {
-                targets.set(i, new RadarTarget(name, time, x, y, heading,
+                targets.set(i, new RadarTarget(name, time, coords, heading,
                         velocity));
                 return;
             }
         }
-        targets.add(new RadarTarget(name, time, x, y, heading, velocity));
+        targets.add(new RadarTarget(name, time, coords, heading, velocity));
     }
 
     /**
      * Gets nearest target to specifical coordinates.
-     * @param x
-     * @param y
+     * @param coords - absolute coordinates of point, to which nearest target
+     * to be found.
      * @return RadarTarget object, contains target nearest to coordinates x
      * and y.
      */
-    public RadarTarget getNearestTarget(double x, double y)
+    public RadarTarget getNearestTarget(Point coords)
     {
-        if(targets.size() == 0)
+        if(targets.isEmpty())
             return null;
 
-        double min_distance = distanceBetween(x, targets.get(0).coords.x, y,
-                targets.get(0).coords.y);
+        double min_distance = distanceBetween(coords, targets.get(0).coords);
         int index = 0;
 
         for(int i = 1; i < targets.size(); i++)
         {
-            double distance = distanceBetween(x, targets.get(i).coords.x, y,
-                    targets.get(i).coords.y);
+            double distance = distanceBetween(coords, targets.get(i).coords);
             if(distance < min_distance)
             {
                 min_distance = distance;

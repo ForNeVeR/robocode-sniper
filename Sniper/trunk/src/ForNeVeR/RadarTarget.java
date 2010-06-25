@@ -15,12 +15,12 @@ class RadarTarget
     double heading;
     double velocity;
 
-    public RadarTarget(String name, long time, double x, double y,
+    public RadarTarget(String name, long time, Point coords,
             double heading, double velocity)
     {
         this.name = new String(name);
         this.time = time;
-        this.coords = new Point(x, y);
+        this.coords = coords;
         this.heading = heading;
         this.velocity = velocity;
     }

@@ -14,8 +14,10 @@ public class Sniper extends AdvancedRobot
     /**
      * Distance that robot will try to keep from current enemy.
      */
-	private final static double DISTANCE_TO_ENEMY = 100;
-	private final static double DELTA_DISTANCE = 35;
+	private final static double DISTANCE_TO_ENEMY = 150;
+	private final static double DELTA_DISTANCE = 50;
+
+    private boolean moveCW = true;
 
 	private RadarMap map;
 
@@ -37,15 +39,16 @@ public class Sniper extends AdvancedRobot
 			if(getRadarTurnRemaining() == 0)
 	            setTurnRadarRightRadians(PI * 2);
 
-			RadarTarget target = map.getNearestTarget(getX(), getY());
+			Point currentPos = new Point(getX(), getY());
+            RadarTarget target = map.getNearestTarget(currentPos);
 
 			if(target != null)
 			{
 				// Determine moving.
-				double distanceToEnemy = distanceBetween(target.coords, getX(),
-                        getY());
-				double bearingToEnemy = Math.atan2(target.coords.x - getX(),
-                        target.coords.y - getY());
+				double distanceToEnemy = distanceBetween(target.coords,
+                        currentPos);
+				double bearingToEnemy = Math.atan2(target.coords.x -
+                        currentPos.x, target.coords.y - currentPos.y);
 
                 if(distanceToEnemy > DISTANCE_TO_ENEMY + DELTA_DISTANCE)
                 {
@@ -56,13 +59,18 @@ public class Sniper extends AdvancedRobot
                             DISTANCE_TO_ENEMY, bearingToEnemy - PI / 2);
                     Point rightPoint = movePointByVector(target.coords,
                             DISTANCE_TO_ENEMY, bearingToEnemy + PI / 2);
-                    // TODO: Somehow check both points. Temporary solution is
-                    // just always use left point.
+
+                    Point pointToMove;
+                    if (isPointOnTheBattlefield(leftPoint))
+                        pointToMove = leftPoint;
+                    else
+                        pointToMove = rightPoint;
+
                     Graphics2D g = getGraphics();
                     g.setColor(Color.blue);
-                    g.drawOval((int) (leftPoint.x - 25), (int) (leftPoint.y
+                    g.drawOval((int) (pointToMove.x - 25), (int) (pointToMove.y
                             - 25), 50, 50);
-                    setMoveToPoint(leftPoint);
+                    setMoveToPoint(pointToMove);
                 }
                 else if(distanceToEnemy < DISTANCE_TO_ENEMY - DELTA_DISTANCE)
                 {
@@ -80,8 +88,10 @@ public class Sniper extends AdvancedRobot
                             - getHeading() + PI / 2);
                     double bearingCCW = normalRelativeAngle(bearingToEnemy
                             - getHeading() - PI / 2);
-                    // TODO: Determine appropriate bearing for moving.
-                    setTurnRight(bearingCW);
+                    if (moveCW)
+                        setTurnRight(bearingCW);
+                    else
+                        setTurnRight(bearingCCW);
                     // Now determine turning speed for moving inside a circle
                     // with radius = DISTANCE_TO_ENEMY.
                     double circleLength = 2 * PI * DISTANCE_TO_ENEMY;
@@ -102,20 +112,17 @@ public class Sniper extends AdvancedRobot
 				{
 					bulletRadius += Rules.getBulletSpeed(bulletPower);
 					
-                    Point imaginaryTarget = target.estimatePositionAt(getTime()
+                    Point targetingPos = target.estimatePositionAt(getTime()
                             + time);
-                    imaginaryDistanceToEnemy = distanceBetween(imaginaryTarget,
-                            getX(), getY());
+                    imaginaryDistanceToEnemy = distanceBetween(targetingPos,
+                            currentPos);
 					double imaginaryBearingToEnemy =
-                            Math.atan2(imaginaryTarget.x - getX(),
-                            imaginaryTarget.y - getY());
+                            Math.atan2(targetingPos.x - currentPos.x,
+                            targetingPos.y - currentPos.y);
 					turnByAngle = normalRelativeAngle(imaginaryBearingToEnemy
                             - getGunHeadingRadians());
 
-					if(imaginaryTarget.x < 0
-                            || imaginaryTarget.x > getBattleFieldWidth()
-                            || imaginaryTarget.y < 0
-                            || imaginaryTarget.y > getBattleFieldHeight())
+					if(!isPointOnTheBattlefield(targetingPos))
 						break;
 				}
 
@@ -136,13 +143,25 @@ public class Sniper extends AdvancedRobot
 	}
 
     /**
+     * Checks whether point is on the battlefield or off its' limits.
+     * @param point
+     * @return
+     */
+    private boolean isPointOnTheBattlefield(Point point)
+    {
+        return point.x >= 0 && point.x <= getBattleFieldWidth() &&
+                point.y >= 0 && point.y <= getBattleFieldHeight();
+    }
+
+    /**
      * Calculates firepower needed to fire to target.
      * @param t RadarTarget object represents target.
      * @return Preferred firepower.
      */
 	private double firePower(RadarTarget t)
 	{
-		double distance = distanceBetween(t.coords, getX(), getY());
+		Point currentPos = new Point(getX(), getY());
+        double distance = distanceBetween(t.coords, currentPos);
 
 		double power = 0;
 		if(distance < 250)
@@ -159,9 +178,11 @@ public class Sniper extends AdvancedRobot
      */
     private void setMoveToPoint(Point p)
     {
-        double distanceToPoint = distanceBetween(p, getX(), getY());
+        Point currentPos = new Point(getX(), getY());
+        
+        double distanceToPoint = distanceBetween(p, currentPos);
         double relativeBearingToPoint = normalRelativeAngle(Math.atan2(p.x
-                - getX(), p.y - getY()) - getHeadingRadians());
+                - currentPos.x, p.y - currentPos.y) - getHeadingRadians());
 
         // Set this to max because it might be set to lesser value by other
         // methods.
@@ -175,12 +196,12 @@ public class Sniper extends AdvancedRobot
 	 */
 	@Override public void onScannedRobot(ScannedRobotEvent e)
     {
-		Point myPos = new Point(getX(), getY());
-        Point enemyPos = movePointByVector(myPos, e.getDistance(),
+		Point currentPos = new Point(getX(), getY());
+        Point enemyPos = movePointByVector(currentPos, e.getDistance(),
                 e.getBearingRadians() + getHeadingRadians());
 
-        map.setTarget(e.getName(), getTime(), enemyPos.x, enemyPos.y,
-                e.getHeadingRadians(), e.getVelocity());
+        map.setTarget(e.getName(), getTime(), enemyPos, e.getHeadingRadians(),
+                e.getVelocity());
     }
 
     @Override public void onRobotDeath(RobotDeathEvent e)
@@ -190,22 +211,23 @@ public class Sniper extends AdvancedRobot
 
 	@Override public void onPaint(Graphics2D g)
 	{
-        RadarTarget currentTarget = map.getNearestTarget(getX(), getY());
+        Point currentPos = new Point(getX(), getY());
+        RadarTarget currentTarget = map.getNearestTarget(currentPos);
 
 		if(currentTarget != null)
 		{
-			Point currentPos = movePointByVector(currentTarget.coords,
+			Point targetPos = movePointByVector(currentTarget.coords,
                     currentTarget.velocity * (getTime() - currentTarget.time),
                     currentTarget.heading);
 
 			g.setColor(Color.green);
-			g.drawOval((int) (currentPos.x - (DISTANCE_TO_ENEMY
-                    - DELTA_DISTANCE)), (int) (currentPos.y
+			g.drawOval((int) (targetPos.x - (DISTANCE_TO_ENEMY
+                    - DELTA_DISTANCE)), (int) (targetPos.y
                     - (DISTANCE_TO_ENEMY - DELTA_DISTANCE)),
                     (int) (DISTANCE_TO_ENEMY - DELTA_DISTANCE) * 2,
                     (int)(DISTANCE_TO_ENEMY - DELTA_DISTANCE) * 2);
-			g.drawOval((int) (currentPos.x - (DISTANCE_TO_ENEMY
-                    + DELTA_DISTANCE)), (int) (currentPos.y
+			g.drawOval((int) (targetPos.x - (DISTANCE_TO_ENEMY
+                    + DELTA_DISTANCE)), (int) (targetPos.y
                     - (DISTANCE_TO_ENEMY + DELTA_DISTANCE)),
                     (int) (DISTANCE_TO_ENEMY + DELTA_DISTANCE) * 2,
                     (int) (DISTANCE_TO_ENEMY + DELTA_DISTANCE) * 2);
@@ -225,6 +247,11 @@ public class Sniper extends AdvancedRobot
                     50);
 		}
 	}
+
+    @Override public void onHitWall(HitWallEvent e)
+    {
+        moveCW = !moveCW;
+    }
 
     @Override public void onHitRobot(HitRobotEvent e)
 	{
