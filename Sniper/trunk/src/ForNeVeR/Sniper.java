@@ -17,8 +17,6 @@ public class Sniper extends AdvancedRobot
 	private final static double DISTANCE_TO_ENEMY = 150;
 	private final static double DELTA_DISTANCE = 50;
 
-    private boolean moveCW = true;
-
 	private RadarMap map;
 
     public Sniper()
@@ -33,12 +31,10 @@ public class Sniper extends AdvancedRobot
     {
         setColors(Color.black, Color.black, Color.green, Color.green,
                 Color.red);
+        setTurnRadarRightRadians(Double.POSITIVE_INFINITY);
 
 		while(true)
         {
-			if(getRadarTurnRemaining() == 0)
-	            setTurnRadarRightRadians(PI * 2);
-
 			Point currentPos = new Point(getX(), getY());
             RadarTarget target = map.getNearestTarget(currentPos);
 
@@ -50,7 +46,8 @@ public class Sniper extends AdvancedRobot
 				double bearingToEnemy = Math.atan2(target.coords.x -
                         currentPos.x, target.coords.y - currentPos.y);
 
-                if(distanceToEnemy > DISTANCE_TO_ENEMY + DELTA_DISTANCE)
+                if(distanceToEnemy > DISTANCE_TO_ENEMY + DELTA_DISTANCE ||
+                        distanceToEnemy < DISTANCE_TO_ENEMY)
                 {
                     // We have 2 points to move to: to the left side of enemy
                     // and to the right side of him. We have to determine which
@@ -72,26 +69,20 @@ public class Sniper extends AdvancedRobot
                             - 25), 50, 50);
                     setMoveToPoint(pointToMove);
                 }
-                else if(distanceToEnemy < DISTANCE_TO_ENEMY - DELTA_DISTANCE)
-                {
-                    // TODO: Check if we are ramming enemy. Else:
-                    setTurnRight(normalRelativeAngle(bearingToEnemy
-                            - getHeading()));
-                    setBack(DISTANCE_TO_ENEMY - distanceToEnemy);
-                }
                 else
                 {
                     // Cycling maneuver.
                     // Again, we have 2 possible bearings to turn to: clockwise
                     // or counter-clockwise.
                     double bearingCW = normalRelativeAngle(bearingToEnemy
-                            - getHeading() + PI / 2);
+                            - getHeadingRadians() - PI / 2);
                     double bearingCCW = normalRelativeAngle(bearingToEnemy
-                            - getHeading() - PI / 2);
-                    if (moveCW)
-                        setTurnRight(bearingCW);
+                            - getHeadingRadians() + PI / 2);
+                    if (Math.abs(bearingCW) < Math.abs(bearingCCW))
+                        setTurnRightRadians(bearingCW);
                     else
-                        setTurnRight(bearingCCW);
+                        setTurnRightRadians(bearingCCW);
+
                     // Now determine turning speed for moving inside a circle
                     // with radius = DISTANCE_TO_ENEMY.
                     double circleLength = 2 * PI * DISTANCE_TO_ENEMY;
@@ -103,6 +94,7 @@ public class Sniper extends AdvancedRobot
 				double turnByAngle = normalRelativeAngle(bearingToEnemy
                         - getGunHeadingRadians());
 				double bulletPower = firePower(target);
+                double bulletSpeed = Rules.getBulletSpeed(bulletPower);
 
                 // Enemy position modelling.
 				double bulletRadius = 0; // distance travelled by our bullet
@@ -110,7 +102,7 @@ public class Sniper extends AdvancedRobot
 				for(long time = 0; bulletRadius < imaginaryDistanceToEnemy ||
                         turnByAngle > Rules.GUN_TURN_RATE * time; time++)
 				{
-					bulletRadius += Rules.getBulletSpeed(bulletPower);
+					bulletRadius += bulletSpeed;
 					
                     Point targetingPos = target.estimatePositionAt(getTime()
                             + time);
@@ -128,9 +120,9 @@ public class Sniper extends AdvancedRobot
 
 				setTurnGunRightRadians(turnByAngle);
 
-				if(getGunHeat() == 0
-                        && Math.abs(getGunTurnRemainingRadians()) < Math.atan2(
-                        20, imaginaryDistanceToEnemy))
+				if(getGunHeat() == 0 &&
+                        Math.abs(getGunTurnRemainingRadians()) <
+                        getHeight() / (2 * imaginaryDistanceToEnemy))
 					fire(bulletPower);
 				else
 					doNothing();
@@ -163,11 +155,12 @@ public class Sniper extends AdvancedRobot
 		Point currentPos = new Point(getX(), getY());
         double distance = distanceBetween(t.coords, currentPos);
 
-		double power = 0;
-		if(distance < 250)
+		double power;
+		if(distance <= DISTANCE_TO_ENEMY + DELTA_DISTANCE)
 			power = Rules.MAX_BULLET_POWER;
 		else
-			power = 250 / distance * Rules.MAX_BULLET_POWER;
+			power = (DISTANCE_TO_ENEMY + DELTA_DISTANCE) / distance *
+                    Rules.MAX_BULLET_POWER;
 
 		return Math.max(power, 0.5);
 	}
@@ -250,7 +243,14 @@ public class Sniper extends AdvancedRobot
 
     @Override public void onHitWall(HitWallEvent e)
     {
-        moveCW = !moveCW;
+        setMaxTurnRate(Rules.MAX_TURN_RATE);
+        double turning = PI / 2 - Math.abs(e.getBearingRadians());
+        if (e.getBearingRadians() > 0)
+            setTurnRightRadians(turning);
+        else
+            setTurnLeftRadians(turning);
+        setBack(Rules.DECELERATION);
+        doNothing();
     }
 
     @Override public void onHitRobot(HitRobotEvent e)
