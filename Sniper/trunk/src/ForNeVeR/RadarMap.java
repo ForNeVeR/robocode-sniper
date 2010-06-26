@@ -1,4 +1,5 @@
 package ForNeVeR;
+
 import java.util.ArrayList;
 import static ForNeVeR.Geometry.*;
 
@@ -11,6 +12,9 @@ class RadarMap
 {
     public ArrayList<RadarTarget> targets;
 
+    /**
+     * Creates a radar map.
+     */
     public RadarMap()
     {
         targets = new ArrayList<RadarTarget>();
@@ -19,6 +23,7 @@ class RadarMap
     /**
      * Adds new radar target or updates existing.
      * @param name - name of target.
+     * @param time - time when target was seen.
      * @param coords - absolute coordinates of target.
      * @param heading - absolute heading of target in radians.
      * @param velocity - velocity of target.
@@ -43,7 +48,7 @@ class RadarMap
      * @param coords - absolute coordinates of point, to which nearest target
      * to be found.
      * @return RadarTarget object, contains target nearest to coordinates x
-     * and y.
+     * and y. If there are no targets on map, returns null.
      */
     public RadarTarget getNearestTarget(Point coords)
     {
