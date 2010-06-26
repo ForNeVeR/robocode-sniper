@@ -22,7 +22,7 @@ class Geometry
      * @param angle Angle in radians to be normalized.
      * @return Normalized angle in range [-PI; PI].
      */
-    public static double normalRelativeAngle(double angle)
+    public static double normalizeAngle(double angle)
     {
         return robocode.util.Utils.normalRelativeAngle(angle);
     }
@@ -50,5 +50,16 @@ class Geometry
     public static double radiansToDegrees(double radians)
     {
         return radians * 180 / Math.PI;
+    }
+
+    /**
+     * Returns absolute bearing from point p1 to point p2.
+     * @param p1
+     * @param p2
+     * @return Absolute bearing in radians.
+     */
+    public static double getBearing(Point p1, Point p2)
+    {
+        return Math.atan2(p2.x - p1.x, p2.y - p1.y);
     }
 }

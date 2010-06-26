@@ -4,7 +4,7 @@ package ForNeVeR;
  * Class represents 2D point with double precision coordinates.
  * @author ForNeVeR
  */
-public class Point implements Cloneable
+public class Point
 {
     public double x, y;
 
@@ -17,10 +17,5 @@ public class Point implements Cloneable
     {
         this.x = x;
         this.y = y;
-    }
-
-    @Override public Point clone()
-    {
-        return new Point(x, y);
     }
 }
