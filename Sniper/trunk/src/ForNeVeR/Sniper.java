@@ -9,8 +9,7 @@ import static ForNeVeR.Geometry.*;
  * Sniper RoboCode bot. Uses advanced targeting system.
  * @author ForNeVeR
  */
-public class Sniper extends AdvancedRobot
-{
+public class Sniper extends AdvancedRobot {
     /**
      * Distance that robot will try to keep from current enemy.
      */
@@ -19,32 +18,27 @@ public class Sniper extends AdvancedRobot
 
 	private RadarMap map;
 
-    public Sniper()
-    {
+    public Sniper() {
         map = new RadarMap();
     }
 
-    @Override public void run()
-    {
+    @Override public void run() {
         setColors(Color.black, Color.black, Color.green, Color.green,
                 Color.red);
         setTurnRadarRightRadians(Double.POSITIVE_INFINITY);
 
-		while(true)
-        {
+		while(true) {
 			Point currentPos = new Point(getX(), getY());
             RadarTarget target = map.getNearestTarget(currentPos);
 
-			if(target != null)
-			{
-				// Determine moving.
+			if (target != null) {
+                // Determine moving.
 				double distanceToEnemy = distanceBetween(target.coords,
                         currentPos);
 				double bearingToEnemy = getBearing(currentPos, target.coords);
 
-                if(distanceToEnemy > DISTANCE_TO_ENEMY + DELTA_DISTANCE ||
-                        distanceToEnemy < DISTANCE_TO_ENEMY)
-                {
+                if (distanceToEnemy > DISTANCE_TO_ENEMY + DELTA_DISTANCE ||
+                        distanceToEnemy < DISTANCE_TO_ENEMY) {
                     // We have 2 points to move to: to the left side of enemy
                     // and to the right side of him. We have to determine which
                     // point to use.
@@ -54,19 +48,18 @@ public class Sniper extends AdvancedRobot
                             DISTANCE_TO_ENEMY, bearingToEnemy + PI / 2);
 
                     Point pointToMove;
-                    if (isPointOnTheBattlefield(leftPoint))
+                    if (isPointOnTheBattlefield(leftPoint)) {
                         pointToMove = leftPoint;
-                    else
+                    } else {
                         pointToMove = rightPoint;
+                    }
 
                     Graphics2D g = getGraphics();
                     g.setColor(Color.blue);
                     g.drawOval((int)(pointToMove.x - 25), (int)(pointToMove.y -
                             25), 50, 50);
                     setMoveToPoint(pointToMove);
-                }
-                else
-                {
+                } else {
                     // Cycling maneuver.
                     // Again, we have 2 possible bearings to turn to: clockwise
                     // or counter-clockwise.
@@ -74,10 +67,11 @@ public class Sniper extends AdvancedRobot
                             getHeadingRadians() - PI / 2);
                     double bearingCCW = normalizeAngle(bearingToEnemy -
                             getHeadingRadians() + PI / 2);
-                    if (Math.abs(bearingCW) < Math.abs(bearingCCW))
+                    if (Math.abs(bearingCW) < Math.abs(bearingCCW)) {
                         setTurnRightRadians(bearingCW);
-                    else
+                    } else {
                         setTurnRightRadians(bearingCCW);
+                    }
 
                     // Now determine turning speed for moving inside a circle
                     // with radius = DISTANCE_TO_ENEMY.
@@ -95,10 +89,9 @@ public class Sniper extends AdvancedRobot
                 // Enemy position modelling.
 				double bulletRadius = 0; // distance travelled by our bullet
                 double imaginaryDistanceToEnemy = distanceToEnemy;
-				for(long time = 0; bulletRadius < imaginaryDistanceToEnemy ||
-                        turnByAngle > Rules.GUN_TURN_RATE * time; time++)
-				{
-					bulletRadius += bulletSpeed;
+				for (long time = 0; bulletRadius < imaginaryDistanceToEnemy ||
+                        turnByAngle > Rules.GUN_TURN_RATE * time; time++) {
+                    bulletRadius += bulletSpeed;
 					
                     Point targetingPos = target.estimatePositionAt(getTime() +
                             time);
@@ -109,21 +102,21 @@ public class Sniper extends AdvancedRobot
 					turnByAngle = normalizeAngle(imaginaryBearingToEnemy -
                             getGunHeadingRadians());
 
-					if(!isPointOnTheBattlefield(targetingPos))
+					if (!isPointOnTheBattlefield(targetingPos)) {
 						break;
+                    }
 				}
 
 				setTurnGunRightRadians(turnByAngle);
 
-				if(getGunHeat() == 0 &&
+				if (getGunHeat() == 0 &&
                         Math.abs(getGunTurnRemainingRadians()) <
-                        getHeight() / (2 * imaginaryDistanceToEnemy))
+                        getHeight() / (2 * imaginaryDistanceToEnemy)) {
 					fire(bulletPower);
-				else
+                } else {
 					doNothing();
-			}
-			else
-			{
+                }
+			} else {
 				doNothing();
 			}
 		}
@@ -134,8 +127,7 @@ public class Sniper extends AdvancedRobot
      * @param point
      * @return
      */
-    private boolean isPointOnTheBattlefield(Point point)
-    {
+    private boolean isPointOnTheBattlefield(Point point) {
         return point.x >= 0 && point.x <= getBattleFieldWidth() &&
                 point.y >= 0 && point.y <= getBattleFieldHeight();
     }
@@ -145,17 +137,17 @@ public class Sniper extends AdvancedRobot
      * @param t RadarTarget object represents target.
      * @return Preferred firepower.
      */
-	private double firePower(RadarTarget t)
-	{
+	private double firePower(RadarTarget t) {
 		Point currentPos = new Point(getX(), getY());
         double distance = distanceBetween(t.coords, currentPos);
 
 		double power;
-		if(distance <= DISTANCE_TO_ENEMY + DELTA_DISTANCE)
+		if (distance <= DISTANCE_TO_ENEMY + DELTA_DISTANCE) {
 			power = Rules.MAX_BULLET_POWER;
-		else
+        } else {
 			power = (DISTANCE_TO_ENEMY + DELTA_DISTANCE) / distance *
                     Rules.MAX_BULLET_POWER;
+        }
 
 		return Math.max(power, 0.5);
 	}
@@ -164,8 +156,7 @@ public class Sniper extends AdvancedRobot
      * Starts movement to specified point.
      * @param p Point to move to.
      */
-    private void setMoveToPoint(Point p)
-    {
+    private void setMoveToPoint(Point p) {
         Point currentPos = new Point(getX(), getY());
         
         double distanceToPoint = distanceBetween(p, currentPos);
@@ -179,8 +170,7 @@ public class Sniper extends AdvancedRobot
         setAhead(distanceToPoint);
     }
 
-	@Override public void onScannedRobot(ScannedRobotEvent e)
-    {
+	@Override public void onScannedRobot(ScannedRobotEvent e) {
 		Point currentPos = new Point(getX(), getY());
         Point enemyPos = movePointByVector(currentPos, e.getDistance(),
                 e.getBearingRadians() + getHeadingRadians());
@@ -189,18 +179,15 @@ public class Sniper extends AdvancedRobot
                 e.getVelocity());
     }
 
-    @Override public void onRobotDeath(RobotDeathEvent e)
-    {
+    @Override public void onRobotDeath(RobotDeathEvent e) {
         map.removeTarget(e.getName());
     }
 
-	@Override public void onPaint(Graphics2D g)
-	{
+	@Override public void onPaint(Graphics2D g) {
         Point currentPos = new Point(getX(), getY());
         RadarTarget currentTarget = map.getNearestTarget(currentPos);
 
-		if(currentTarget != null)
-		{
+		if (currentTarget != null) {
 			Point targetPos = movePointByVector(currentTarget.coords,
                     currentTarget.velocity * (getTime() - currentTarget.time),
                     currentTarget.heading);
@@ -218,35 +205,32 @@ public class Sniper extends AdvancedRobot
                     (int)(DISTANCE_TO_ENEMY + DELTA_DISTANCE) * 2);
 		}
 
-		for(int i = 0; i < map.targets.size(); i++)
-		{
+		for (RadarTarget target : map.targets) {
+            // Paint last seen position of target:
+			g.setColor(Color.orange);
+			g.drawOval((int) (target.coords.x - 25), (int) (target.coords.y -
+                    25), 50, 50);
+
             // Paint estimated position of target:
-			Point p = map.targets.get(i).estimatePositionAt(getTime());
+			Point p = target.estimatePositionAt(getTime());
 			g.setColor(Color.blue);
 			g.drawOval((int) (p.x - 25), (int) (p.y - 25), 50, 50);
-            
-            // Paint last seen position of target:
-            RadarTarget t = map.targets.get(i);
-			g.setColor(Color.orange);
-			g.drawOval((int) (t.coords.x - 25), (int) (t.coords.y - 25), 50,
-                    50);
-		}
+        }
 	}
 
-    @Override public void onHitWall(HitWallEvent e)
-    {
+    @Override public void onHitWall(HitWallEvent e) {
         setMaxTurnRate(Rules.MAX_TURN_RATE);
         double turning = PI / 2 - Math.abs(e.getBearingRadians());
-        if (e.getBearingRadians() > 0)
+        if (e.getBearingRadians() > 0) {
             setTurnRightRadians(turning);
-        else
+        } else {
             setTurnLeftRadians(turning);
+        }
         setBack(25);
         doNothing();
     }
 
-    @Override public void onHitRobot(HitRobotEvent e)
-	{
+    @Override public void onHitRobot(HitRobotEvent e) {
         // TODO: Analyse self and enemy energy and decise wherther to ram him
         // or not.
 		setBack(500);

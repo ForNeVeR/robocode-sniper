@@ -8,20 +8,18 @@ import static ForNeVeR.Geometry.*;
  * other methods.
  * @author ForNeVeR
  */
-class RadarMap
-{
+class RadarMap {
     public ArrayList<RadarTarget> targets;
 
     /**
      * Creates a radar map.
      */
-    public RadarMap()
-    {
+    public RadarMap() {
         targets = new ArrayList<RadarTarget>();
     }
 
     /**
-     * Adds new radar target or updates existing.
+     * Adds new target to the map or updates existing.
      * @param name - name of target.
      * @param time - time when target was seen.
      * @param coords - absolute coordinates of target.
@@ -29,12 +27,9 @@ class RadarMap
      * @param velocity - velocity of target.
      */
     public void setTarget(String name, long time, Point coords, double heading,
-            double velocity)
-    {
-        for(int i = 0; i < targets.size(); i++)
-        {
-            if(targets.get(i).name.equals(name))
-            {
+            double velocity) {
+        for (int i = 0; i < targets.size(); i++) {
+            if (targets.get(i).name.equals(name)) {
                 targets.set(i, new RadarTarget(name, time, coords, heading,
                         velocity));
                 return;
@@ -50,19 +45,17 @@ class RadarMap
      * @return RadarTarget object, contains target nearest to coordinates x
      * and y. If there are no targets on map, returns null.
      */
-    public RadarTarget getNearestTarget(Point coords)
-    {
-        if(targets.isEmpty())
+    public RadarTarget getNearestTarget(Point coords) {
+        if (targets.isEmpty()) {
             return null;
+        }
 
         double min_distance = distanceBetween(coords, targets.get(0).coords);
         int index = 0;
 
-        for(int i = 1; i < targets.size(); i++)
-        {
+        for (int i = 1; i < targets.size(); i++) {
             double distance = distanceBetween(coords, targets.get(i).coords);
-            if(distance < min_distance)
-            {
+            if (distance < min_distance) {
                 min_distance = distance;
                 index = i;
             }
@@ -75,12 +68,9 @@ class RadarMap
      * Deletes target from map (possibly due to target death).
      * @param targetName - name of target to delete.
      */
-    public void removeTarget(String targetName)
-    {
-        for(int i = 0; i < targets.size(); i++)
-        {
-            if(targets.get(i).name.equals(targetName))
-            {
+    public void removeTarget(String targetName) {
+        for (int i = 0; i < targets.size(); i++) {
+            if (targets.get(i).name.equals(targetName)) {
                 targets.remove(i);
                 return;
             }

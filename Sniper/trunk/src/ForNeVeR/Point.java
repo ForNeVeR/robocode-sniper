@@ -4,15 +4,13 @@ package ForNeVeR;
  * Class represents 2D point with double precision coordinates.
  * @author ForNeVeR
  */
-public class Point
-{
+public class Point {
     public double x, y;
 
     /**
      * Creates a point with coordinates (0, 0).
      */
-    public Point()
-    {
+    public Point() {
         x = y = 0;
     }
 
@@ -21,8 +19,7 @@ public class Point
      * @param x
      * @param y
      */
-    public Point(double x, double y)
-    {
+    public Point(double x, double y) {
         this.x = x;
         this.y = y;
     }

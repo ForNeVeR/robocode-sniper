@@ -7,17 +7,23 @@ import static ForNeVeR.Geometry.*;
  * values.
  * @author ForNeVeR
  */
-class RadarTarget
-{
+class RadarTarget {
     String name;
     long time; // when target was last seen
     Point coords;
     double heading;
     double velocity;
 
+    /**
+     * Creates a radar target with specified parameters.
+     * @param name
+     * @param time
+     * @param coords
+     * @param heading
+     * @param velocity
+     */
     public RadarTarget(String name, long time, Point coords,
-            double heading, double velocity)
-    {
+            double heading, double velocity) {
         this.name = new String(name);
         this.time = time;
         this.coords = coords;
@@ -30,8 +36,7 @@ class RadarTarget
      * @param atTime Time when target position must be calculated.
      * @return RadarTarget object with coordinates at given time.
      */
-    public Point estimatePositionAt(long atTime)
-    {
+    public Point estimatePositionAt(long atTime) {
         return movePointByVector(coords, velocity * (atTime - time), heading);
     }
 }
