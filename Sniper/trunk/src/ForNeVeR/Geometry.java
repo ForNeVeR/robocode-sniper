@@ -18,9 +18,9 @@ class Geometry
     }
     
     /**
-     * Normalizes angle (i.e. converts it to range [-PI; PI]).
+     * Normalizes angle (i.e. converts it to range [-PI; PI)).
      * @param angle Angle in radians to be normalized.
-     * @return Normalized angle in range [-PI; PI].
+     * @return Normalized angle in range [-PI; PI).
      */
     public static double normalizeAngle(double angle)
     {
