@@ -45,7 +45,16 @@ class Geometry {
      * @return Angle in degrees.
      */
     public static double radiansToDegrees(double radians) {
-        return radians * 180 / Math.PI;
+        return radians * 180.0 / Math.PI;
+    }
+
+    /**
+     * Converts degrees to radians.
+     * @param degrees Angle in degrees to be converted.
+     * @return Angle in radians.
+     */
+    public static double degreesToRadians(double degrees) {
+        return degrees * Math.PI / 180.0;
     }
 
     /**

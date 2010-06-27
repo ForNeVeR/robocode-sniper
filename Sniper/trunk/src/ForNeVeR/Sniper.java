@@ -33,18 +33,19 @@ public class Sniper extends AdvancedRobot {
 
 			if (target != null) {
                 // Determine moving.
-				double distanceToEnemy = distanceBetween(target.coords,
+				double distanceToEnemy = distanceBetween(target.lastCoords(),
                         currentPos);
-				double bearingToEnemy = getBearing(currentPos, target.coords);
+				double bearingToEnemy = getBearing(currentPos,
+                        target.lastCoords());
 
                 if (distanceToEnemy > DISTANCE_TO_ENEMY + DELTA_DISTANCE ||
                         distanceToEnemy < DISTANCE_TO_ENEMY) {
                     // We have 2 points to move to: to the left side of enemy
                     // and to the right side of him. We have to determine which
                     // point to use.
-                    Point leftPoint = movePointByVector(target.coords,
+                    Point leftPoint = movePointByVector(target.lastCoords(),
                             DISTANCE_TO_ENEMY, bearingToEnemy - PI / 2);
-                    Point rightPoint = movePointByVector(target.coords,
+                    Point rightPoint = movePointByVector(target.lastCoords(),
                             DISTANCE_TO_ENEMY, bearingToEnemy + PI / 2);
 
                     Point pointToMove;
@@ -139,7 +140,7 @@ public class Sniper extends AdvancedRobot {
      */
 	private double firePower(RadarTarget t) {
 		Point currentPos = new Point(getX(), getY());
-        double distance = distanceBetween(t.coords, currentPos);
+        double distance = distanceBetween(t.lastCoords(), currentPos);
 
 		double power;
 		if (distance <= DISTANCE_TO_ENEMY + DELTA_DISTANCE) {
@@ -171,12 +172,7 @@ public class Sniper extends AdvancedRobot {
     }
 
 	@Override public void onScannedRobot(ScannedRobotEvent e) {
-		Point currentPos = new Point(getX(), getY());
-        Point enemyPos = movePointByVector(currentPos, e.getDistance(),
-                e.getBearingRadians() + getHeadingRadians());
-
-        map.setTarget(e.getName(), getTime(), enemyPos, e.getHeadingRadians(),
-                e.getVelocity());
+		map.setTarget(this, e);
     }
 
     @Override public void onRobotDeath(RobotDeathEvent e) {
@@ -188,9 +184,7 @@ public class Sniper extends AdvancedRobot {
         RadarTarget currentTarget = map.getNearestTarget(currentPos);
 
 		if (currentTarget != null) {
-			Point targetPos = movePointByVector(currentTarget.coords,
-                    currentTarget.velocity * (getTime() - currentTarget.time),
-                    currentTarget.heading);
+			Point targetPos = currentTarget.estimatePositionAt(getTime());
 
 			g.setColor(Color.green);
 			g.drawOval((int) (targetPos.x - (DISTANCE_TO_ENEMY - 
@@ -208,8 +202,8 @@ public class Sniper extends AdvancedRobot {
 		for (RadarTarget target : map.targets) {
             // Paint last seen position of target:
 			g.setColor(Color.orange);
-			g.drawOval((int) (target.coords.x - 25), (int) (target.coords.y -
-                    25), 50, 50);
+			g.drawOval((int) (target.lastCoords().x - 25),
+                    (int) (target.lastCoords().y - 25), 50, 50);
 
             // Paint estimated position of target:
 			Point p = target.estimatePositionAt(getTime());
@@ -229,10 +223,4 @@ public class Sniper extends AdvancedRobot {
         setBack(25);
         doNothing();
     }
-
-    @Override public void onHitRobot(HitRobotEvent e) {
-        // TODO: Analyse self and enemy energy and decise wherther to ram him
-        // or not.
-		setBack(500);
-	}
 }

@@ -1,5 +1,7 @@
 package ForNeVeR;
 
+import robocode.ScannedRobotEvent;
+import robocode.Robot;
 import java.util.ArrayList;
 import static ForNeVeR.Geometry.*;
 
@@ -20,28 +22,28 @@ class RadarMap {
 
     /**
      * Adds new target to the map or updates existing.
-     * @param name - name of target.
-     * @param time - time when target was seen.
-     * @param coords - absolute coordinates of target.
-     * @param heading - absolute heading of target in radians.
-     * @param velocity - velocity of target.
+     * @param robot Reference to your robot object.
+     * @param event ScannedRobotEvent for determining target position.
      */
-    public void setTarget(String name, long time, Point coords, double heading,
-            double velocity) {
+    public void setTarget(Robot robot, ScannedRobotEvent event) {
+        String targetName = event.getName();
+        TargetPosition targetPosition = new TargetPosition(robot, event);
+
         for (int i = 0; i < targets.size(); i++) {
-            if (targets.get(i).name.equals(name)) {
-                targets.set(i, new RadarTarget(name, time, coords, heading,
-                        velocity));
+            RadarTarget target = targets.get(i);
+            if (target.name.equals(targetName)) {
+                target.addPosition(targetPosition);
                 return;
             }
         }
-        targets.add(new RadarTarget(name, time, coords, heading, velocity));
+
+        targets.add(new RadarTarget(targetName, targetPosition));
     }
 
     /**
      * Gets nearest target to specifical coordinates.
-     * @param coords - absolute coordinates of point, to which nearest target
-     * to be found.
+     * @param coords Absolute coordinates of point, to which nearest target to
+     * be found.
      * @return RadarTarget object, contains target nearest to coordinates x
      * and y. If there are no targets on map, returns null.
      */
@@ -50,11 +52,12 @@ class RadarMap {
             return null;
         }
 
-        double min_distance = distanceBetween(coords, targets.get(0).coords);
+        double min_distance = distanceBetween(coords,
+                targets.get(0).lastCoords());
         int index = 0;
-
         for (int i = 1; i < targets.size(); i++) {
-            double distance = distanceBetween(coords, targets.get(i).coords);
+            double distance = distanceBetween(coords,
+                    targets.get(i).lastCoords());
             if (distance < min_distance) {
                 min_distance = distance;
                 index = i;
@@ -66,7 +69,7 @@ class RadarMap {
 
     /**
      * Deletes target from map (possibly due to target death).
-     * @param targetName - name of target to delete.
+     * @param targetName Name of target to delete.
      */
     public void removeTarget(String targetName) {
         for (int i = 0; i < targets.size(); i++) {

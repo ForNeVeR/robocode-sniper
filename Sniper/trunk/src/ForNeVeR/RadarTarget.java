@@ -1,42 +1,73 @@
 package ForNeVeR;
 
+import java.util.ArrayList;
 import static ForNeVeR.Geometry.*;
 
 /**
- * Represents radar target. Coordinates stored by absolute, not relative
- * values.
+ * Represents radar target.
  * @author ForNeVeR
  */
 class RadarTarget {
-    String name;
-    long time; // when target was last seen
-    Point coords;
-    double heading;
-    double velocity;
+    public String name;
+    private ArrayList<TargetPosition> positions;
 
     /**
      * Creates a radar target with specified parameters.
-     * @param name
-     * @param time
-     * @param coords
-     * @param heading
-     * @param velocity
+     * @param name Name of the target.
+     * @param position TargetPosition objects representing the target.
      */
-    public RadarTarget(String name, long time, Point coords,
-            double heading, double velocity) {
-        this.name = new String(name);
-        this.time = time;
-        this.coords = coords;
-        this.heading = heading;
-        this.velocity = velocity;
+    public RadarTarget(String name, TargetPosition position) {
+        this.name = name;
+        positions = new ArrayList<TargetPosition>();
+        positions.add(position);
+    }
+
+    /**
+     * Adds position to target positions list. Deletes the oldest positions if
+     * needed.
+     * @param position Position to add.
+     */
+    public void addPosition(TargetPosition position) {
+        if (positions.size() > 0) {
+            positions.remove(0);
+        }
+        positions.add(position);
+    }
+
+    /**
+     * Returns last known coordinates of target.
+     * @return Coordinates of last position.
+     */
+    public Point lastCoords() {
+        if (positions.isEmpty()) {
+            return null;
+        }
+
+        long lastTime = positions.get(0).time;
+        Point lastCoords = positions.get(0).coords;
+        for (int i = 1; i < positions.size(); ++i) {
+            TargetPosition position = positions.get(i);
+            if (position.time > lastTime) {
+                lastTime = position.time;
+                lastCoords = position.coords;
+            }
+        }
+
+        return lastCoords;
     }
 
     /**
      * Calculates estimated target position at some moment of time.
      * @param atTime Time when target position must be calculated.
-     * @return RadarTarget object with coordinates at given time.
+     * @return Point object with coordinates at given time.
      */
     public Point estimatePositionAt(long atTime) {
-        return movePointByVector(coords, velocity * (atTime - time), heading);
+        if (positions.size() > 0) {
+            TargetPosition position = positions.get(0);
+            return movePointByVector(position.coords, position.velocity *
+                    (atTime - position.time), position.heading);
+        } else {
+            return null;
+        }
     }
 }
