@@ -57,8 +57,8 @@ public class Sniper extends AdvancedRobot {
 
                     Graphics2D g = getGraphics();
                     g.setColor(Color.blue);
-                    g.drawOval((int)(pointToMove.x - 25), (int)(pointToMove.y -
-                            25), 50, 50);
+                    g.drawOval((int) (pointToMove.x - 25),
+                            (int) (pointToMove.y - 25), 50, 50);
                     setMoveToPoint(pointToMove);
                 } else {
                     // Cycling maneuver.
@@ -193,14 +193,14 @@ public class Sniper extends AdvancedRobot {
 			g.setColor(Color.green);
 			g.drawOval((int) (targetPos.x - (DISTANCE_TO_ENEMY - 
                     DELTA_DISTANCE)),
-                    (int)(targetPos.y - (DISTANCE_TO_ENEMY - DELTA_DISTANCE)),
-                    (int)(DISTANCE_TO_ENEMY - DELTA_DISTANCE) * 2,
-                    (int)(DISTANCE_TO_ENEMY - DELTA_DISTANCE) * 2);
+                    (int) (targetPos.y - (DISTANCE_TO_ENEMY - DELTA_DISTANCE)),
+                    (int) (DISTANCE_TO_ENEMY - DELTA_DISTANCE) * 2,
+                    (int) (DISTANCE_TO_ENEMY - DELTA_DISTANCE) * 2);
 			g.drawOval((int) (targetPos.x - (DISTANCE_TO_ENEMY +
                     DELTA_DISTANCE)),
-                    (int)(targetPos.y - (DISTANCE_TO_ENEMY + DELTA_DISTANCE)),
-                    (int)(DISTANCE_TO_ENEMY + DELTA_DISTANCE) * 2,
-                    (int)(DISTANCE_TO_ENEMY + DELTA_DISTANCE) * 2);
+                    (int) (targetPos.y - (DISTANCE_TO_ENEMY + DELTA_DISTANCE)),
+                    (int) (DISTANCE_TO_ENEMY + DELTA_DISTANCE) * 2,
+                    (int) (DISTANCE_TO_ENEMY + DELTA_DISTANCE) * 2);
 		}
 
 		for (Target target : map.targets) {
