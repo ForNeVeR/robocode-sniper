@@ -16,10 +16,10 @@ public class Sniper extends AdvancedRobot {
 	private final static double DISTANCE_TO_ENEMY = 150;
 	private final static double DELTA_DISTANCE = 50;
 
-	private RadarMap map;
+	private Map map;
 
     public Sniper() {
-        map = new RadarMap();
+        map = new Map();
     }
 
     @Override public void run() {
@@ -29,7 +29,7 @@ public class Sniper extends AdvancedRobot {
 
 		while(true) {
 			Point currentPos = new Point(getX(), getY());
-            RadarTarget target = map.getNearestTarget(currentPos);
+            Target target = map.getNearestTarget(currentPos);
 
 			if (target != null) {
                 // Determine moving.
@@ -114,6 +114,10 @@ public class Sniper extends AdvancedRobot {
                         Math.abs(getGunTurnRemainingRadians()) <
                         getHeight() / (2 * imaginaryDistanceToEnemy)) {
 					fire(bulletPower);
+                    // TODO: Properly determine bullet coordinates.
+                    Bullet bullet = new Bullet(currentPos,
+                            getGunHeadingRadians(), bulletPower, getTime());
+                    map.addBullet(bullet);
                 } else {
 					doNothing();
                 }
@@ -138,7 +142,7 @@ public class Sniper extends AdvancedRobot {
      * @param t RadarTarget object represents target.
      * @return Preferred firepower.
      */
-	private double firePower(RadarTarget t) {
+	private double firePower(Target t) {
 		Point currentPos = new Point(getX(), getY());
         double distance = distanceBetween(t.lastCoords(), currentPos);
 
@@ -181,7 +185,7 @@ public class Sniper extends AdvancedRobot {
 
 	@Override public void onPaint(Graphics2D g) {
         Point currentPos = new Point(getX(), getY());
-        RadarTarget currentTarget = map.getNearestTarget(currentPos);
+        Target currentTarget = map.getNearestTarget(currentPos);
 
 		if (currentTarget != null) {
 			Point targetPos = currentTarget.estimatePositionAt(getTime());
@@ -199,7 +203,7 @@ public class Sniper extends AdvancedRobot {
                     (int)(DISTANCE_TO_ENEMY + DELTA_DISTANCE) * 2);
 		}
 
-		for (RadarTarget target : map.targets) {
+		for (Target target : map.targets) {
             // Paint last seen position of target:
 			g.setColor(Color.orange);
 			g.drawOval((int) (target.lastCoords().x - 25),

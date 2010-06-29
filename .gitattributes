@@ -7,9 +7,10 @@ nbproject/private/private.properties -text
 nbproject/private/private.xml -text
 nbproject/project.properties -text
 nbproject/project.xml -text
+src/ForNeVeR/Bullet.java -text
 src/ForNeVeR/Geometry.java -text
+src/ForNeVeR/Map.java -text
 src/ForNeVeR/Point.java -text
-src/ForNeVeR/RadarMap.java -text
-src/ForNeVeR/RadarTarget.java -text
 src/ForNeVeR/Sniper.java -text
+src/ForNeVeR/Target.java -text
 src/ForNeVeR/TargetPosition.java -text

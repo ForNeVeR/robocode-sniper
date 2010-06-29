@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import static ForNeVeR.Geometry.*;
 
 /**
- * Represents radar target.
+ * Represents enemy target on radar.
  * @author ForNeVeR
  */
-class RadarTarget {
+class Target {
     public String name;
     private ArrayList<TargetPosition> positions;
 
@@ -16,7 +16,7 @@ class RadarTarget {
      * @param name Name of the target.
      * @param position TargetPosition objects representing the target.
      */
-    public RadarTarget(String name, TargetPosition position) {
+    public Target(String name, TargetPosition position) {
         this.name = name;
         positions = new ArrayList<TargetPosition>();
         positions.add(position);

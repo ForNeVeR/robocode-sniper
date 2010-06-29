@@ -10,14 +10,15 @@ import static ForNeVeR.Geometry.*;
  * other methods.
  * @author ForNeVeR
  */
-class RadarMap {
-    public ArrayList<RadarTarget> targets;
+class Map {
+    public ArrayList<Target> targets;
+    public ArrayList<Bullet> bullets;
 
     /**
      * Creates a radar map.
      */
-    public RadarMap() {
-        targets = new ArrayList<RadarTarget>();
+    public Map() {
+        targets = new ArrayList<Target>();
     }
 
     /**
@@ -30,15 +31,24 @@ class RadarMap {
         TargetPosition targetPosition = new TargetPosition(robot, event);
 
         for (int i = 0; i < targets.size(); i++) {
-            RadarTarget target = targets.get(i);
+            Target target = targets.get(i);
             if (target.name.equals(targetName)) {
                 target.addPosition(targetPosition);
                 return;
             }
         }
 
-        targets.add(new RadarTarget(targetName, targetPosition));
+        targets.add(new Target(targetName, targetPosition));
     }
+
+    /**
+     * Adds bullet to radar map.
+     * @param bullet Reference to Bullet object to add.
+     */
+    public void addBullet(Bullet bullet) {
+        bullets.add(bullet);
+    }
+
 
     /**
      * Gets nearest target to specifical coordinates.
@@ -47,7 +57,7 @@ class RadarMap {
      * @return RadarTarget object, contains target nearest to coordinates x
      * and y. If there are no targets on map, returns null.
      */
-    public RadarTarget getNearestTarget(Point coords) {
+    public Target getNearestTarget(Point coords) {
         if (targets.isEmpty()) {
             return null;
         }
